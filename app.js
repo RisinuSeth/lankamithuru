@@ -230,7 +230,9 @@
         pending = -1;
         failedVideos.delete(index);
         video.dataset.videoState = "playing";
+        video.style.zIndex = "1";
         video.classList.add("is-visible");
+        if (previous >= 0 && previous !== index) videos[previous].style.zIndex = "0";
         markProgress(index);
 
         // Let the CSS crossfade complete before pausing the previous footage.
