@@ -11,75 +11,128 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal?.classList.co
 $$("[data-search-term]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();openSearch(a.dataset.searchTerm||"")}));
 const menu=$("#menuToggle"),nav=$(".main-nav");menu?.addEventListener("click",()=>{const open=menu.getAttribute("aria-expanded")==="true";menu.setAttribute("aria-expanded",String(!open));nav?.classList.toggle("open",!open)});$$(".main-nav a").forEach(a=>a.addEventListener("click",()=>{nav?.classList.remove("open");menu?.setAttribute("aria-expanded","false")}));
 
-/* Sri Lankan hero video rotation with slide transitions */
+/* Sri Lankan hero video rotation — advance only after a clip actually plays */
 (()=>{
  const hero=document.querySelector(".hero-video-backdrop");
  if(!hero)return;
  const videos=[...hero.querySelectorAll(".hero-bg-video")];
  const bars=[...hero.querySelectorAll(".hero-video-progress span")];
  if(!videos.length)return;
- let current=0, timer=null, pageHidden=document.hidden;
+
+ let current=0, timer=null, pageHidden=document.hidden, playing=false, failed=new Set();
+ const PLAY_TIME=11000, LOAD_TIMEOUT=16000;
  const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
- const PLAY_TIME=9500, FAILOVER_TIME=4500;
  const stop=()=>{if(timer!==null){clearTimeout(timer);timer=null;}};
+ const setProgress=(index)=>bars.forEach((bar,i)=>bar.classList.toggle("is-current",i===index));
  const schedule=(delay)=>{stop();if(!pageHidden)timer=setTimeout(()=>activate(current+1),delay);};
+
  videos.forEach((video,index)=>{
-   video.muted=true; video.defaultMuted=true; video.playsInline=true; video.loop=true;
+   video.muted=true;
+   video.defaultMuted=true;
+   video.playsInline=true;
+   video.loop=true;
    video.controls=false;
    ["muted","playsinline","webkit-playsinline"].forEach(attr=>video.setAttribute(attr,""));
+
    video.addEventListener("playing",()=>{
+     if(index!==current)return;
+     playing=true;
+     failed.delete(index);
      video.dataset.videoState="playing";
      video.classList.remove("has-video-error");
-     if(index===current)schedule(PLAY_TIME);
+     setProgress(index);
+     schedule(PLAY_TIME);
    });
-   video.addEventListener("error",()=>{
+
+   const markFailed=()=>{
      video.dataset.videoState="error";
      video.classList.add("has-video-error");
-     if(index===current)schedule(FAILOVER_TIME);
+     failed.add(index);
+     if(index===current&&!playing)activateNextAvailable();
+   };
+   video.addEventListener("error",markFailed);
+   video.addEventListener("stalled",()=>{
+     if(index===current&&!playing) {
+       video.dataset.videoState="stalled";
+       schedule(LOAD_TIMEOUT);
+     }
    });
  });
- function tryPlay(video,index){
-   if(!video||pageHidden)return;
-   video.muted=true;
-   const result=video.play();
-   if(result&&typeof result.catch==="function"){
-     result.catch(()=>{
-       video.dataset.videoState="blocked";
-       if(index===current)schedule(FAILOVER_TIME);
-     });
+
+ function activateNextAvailable(){
+   stop();
+   playing=false;
+   if(failed.size>=videos.length){
+     videos.forEach(v=>{v.pause();v.classList.remove("is-visible");});
+     bars.forEach(b=>b.classList.remove("is-current"));
+     return;
    }
+   let next=(current+1)%videos.length;
+   let attempts=0;
+   while(failed.has(next)&&attempts<videos.length){next=(next+1)%videos.length;attempts++;}
+   activate(next);
  }
+
  function activate(index){
    stop();
-   const next=(index+videos.length)%videos.length;
-   current=next;
+   playing=false;
+   current=(index+videos.length)%videos.length;
    videos.forEach((video,i)=>{
      const active=i===current;
      video.classList.toggle("is-visible",active);
      video.classList.remove("is-leaving");
-     bars[i]?.classList.toggle("is-current",active);
-     if(!active)video.pause();
+     if(!active){video.pause();video.dataset.videoState="idle";}
    });
+   setProgress(current);
    const active=videos[current];
-   if(!active)return;
+   if(!active||pageHidden)return;
    active.dataset.videoState="loading";
+   active.muted=true;
    if(active.readyState===0)active.load();
-   tryPlay(active,current);
-   schedule(FAILOVER_TIME);
+
+   let settled=false;
+   const loadTimer=setTimeout(()=>{
+     if(!settled&&current===index&&!playing){
+       failed.add(index);
+       active.dataset.videoState="timeout";
+       activateNextAvailable();
+     }
+   },LOAD_TIMEOUT);
+
+   const startPlayback=()=>{
+     if(settled||pageHidden||current!==index)return;
+     settled=true;
+     clearTimeout(loadTimer);
+     const result=active.play();
+     if(result&&typeof result.catch==="function"){
+       result.catch(()=>{
+         failed.add(index);
+         active.dataset.videoState="blocked";
+         activateNextAvailable();
+       });
+     }
+   };
+   if(active.readyState>=2)startPlayback();
+   else active.addEventListener("canplay",startPlayback,{once:true});
  }
+
  document.addEventListener("visibilitychange",()=>{
    pageHidden=document.hidden;
    if(pageHidden){stop();videos.forEach(v=>v.pause());}
    else activate(current);
  });
  hero.addEventListener("mouseenter",stop);
- hero.addEventListener("mouseleave",()=>{if(!pageHidden)schedule(PLAY_TIME);});
+ hero.addEventListener("mouseleave",()=>{if(!pageHidden&&playing)schedule(PLAY_TIME);});
  document.addEventListener("pointerdown",()=>{
-   if(!pageHidden)tryPlay(videos[current],current);
+   if(!pageHidden&&!playing) {
+     const active=videos[current];
+     if(active){active.muted=true;active.play().catch(()=>{});}
+   }
  },{passive:true,once:true});
+
  if(reducedMotion){
-   videos.forEach((video,i)=>{video.classList.toggle("is-visible",i===0);});
-   bars[0]?.classList.add("is-current");
+   videos.forEach(v=>{v.pause();v.classList.remove("is-visible");});
+   bars.forEach(b=>b.classList.remove("is-current"));
  }else{
    activate(0);
  }
