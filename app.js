@@ -242,4 +242,46 @@
     }, { once: true, passive: true });
     if (!reducedMotion) start(0);
   }
+
+  // Crossfade through real scenes from Sri Lanka for Explore, Hub and Edu.
+  // Each division rotates independently and skips images that fail to load.
+  const photoRotations = $$(".photo-rotation[data-photo-rotation]");
+  const reducedPhotoMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reducedPhotoMotion) {
+    photoRotations.forEach((gallery, galleryIndex) => {
+      const frames = $$(".photo-frame", gallery);
+      if (frames.length < 2) return;
+      let active = Math.max(0, frames.findIndex(frame => frame.classList.contains("is-active")));
+      const activateNext = () => {
+        for (let step = 1; step <= frames.length; step += 1) {
+          const next = (active + step) % frames.length;
+          const frame = frames[next];
+          if (frame.classList.contains("is-broken")) continue;
+          frame.loading = "eager";
+          frame.addEventListener("error", () => {
+            frame.classList.add("is-broken");
+            if (frame.classList.contains("is-active")) activateNext();
+          }, { once: true });
+          if (frame.complete && frame.naturalWidth === 0) {
+            frame.classList.add("is-broken");
+            continue;
+          }
+          frames[active]?.classList.remove("is-active");
+          frame.classList.add("is-active");
+          active = next;
+          return;
+        }
+      };
+      frames.forEach(frame => frame.addEventListener("error", () => {
+        frame.classList.add("is-broken");
+        if (frame.classList.contains("is-active")) activateNext();
+      }, { once: true }));
+      window.setTimeout(() => {
+        window.setInterval(() => {
+          const rect = gallery.getBoundingClientRect();
+          if (rect.bottom > 0 && rect.top < window.innerHeight) activateNext();
+        }, 5200);
+      }, galleryIndex * 1250);
+    });
+  }
 })();
