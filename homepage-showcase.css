@@ -30,7 +30,7 @@
 .hero-bg-video{z-index:0;display:block;background:#173c45}
 .hero-video-shade{z-index:1;pointer-events:none}
 .hero-video-caption,.hero-video-progress{z-index:2}
-.hero-bg-video.has-video-error{opacity:0}
+.hero-bg-video.has-video-error{opacity:1}
 @media(prefers-reduced-motion:reduce){
   .hero-bg-video{transition:none}
 }
