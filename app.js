@@ -165,7 +165,18 @@
       if (!videos.length || document.hidden || reducedMotion) return;
       stopTimers();
       pauseAll();
-      current = (index + videos.length) % videos.length;
+      let target = (index + videos.length) % videos.length;
+      let checked = 0;
+      while (failedVideos.has(target) && checked < videos.length) {
+        target = (target + 1) % videos.length;
+        checked += 1;
+      }
+      if (checked >= videos.length) {
+        videos.forEach(video => video.classList.remove("is-visible"));
+        bars.forEach(bar => bar.classList.remove("is-current"));
+        return;
+      }
+      current = target;
       const video = videos[current];
       videos.forEach((item, i) => {
         item.classList.toggle("is-visible", i === current);
