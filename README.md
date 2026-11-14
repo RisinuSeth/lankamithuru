@@ -10,7 +10,7 @@ A unified Sri Lankan discovery platform with three connected divisions:
 
 ## Current build
 
-The first responsive website foundation uses HTML, CSS and vanilla JavaScript. It includes the homepage, three division sections, responsive navigation, searchable categories, keyboard search shortcut (Ctrl/Cmd + K), mobile navigation, SEO metadata and reduced-motion support.
+The responsive website now has a homepage plus dedicated Explore (`explore.html`), Hub (`hub.html`) and Edu (`edu.html`) pages. It uses HTML, CSS and vanilla JavaScript, shared navigation and search, a custom embrace-inspired SVG brand mark, responsive layouts and SEO metadata.
 
 The directory and education catalogues are not yet backed by live data. Category links are entry points, not verified business or education records.
 
