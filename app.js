@@ -126,59 +126,80 @@
     openSearch(link.dataset.searchTerm || "");
   }));
 
-  // Hero video carousel: prepare the next clip before switching the visible footage.
-  // The currently playing video stays on screen until the next one is actually playing.
+  // Hero video carousel: play each scene once in a strict sequence.
+  // Advance on the clip's timeline (or when it ends), never on overlapping timers.
   const hero = $(".hero-video-backdrop");
   if (hero) {
     const videos = $$(".hero-bg-video", hero);
     const bars = $$(".hero-video-progress span", hero);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const durations = 18000;
-    const loadTimeout = 22000;
+    const maxSceneSeconds = 13.5;
+    const loadTimeout = 18000;
     let current = -1;
     let pending = -1;
-    let rotationTimer = 0;
     let loadTimer = 0;
     let userGestureSeen = false;
+    let switching = false;
     const failedVideos = new Set();
 
-    const clearTimers = () => {
-      window.clearTimeout(rotationTimer);
+    const clearLoadTimer = () => {
       window.clearTimeout(loadTimer);
-      rotationTimer = 0;
       loadTimer = 0;
     };
     const markProgress = index => bars.forEach((bar, i) => bar.classList.toggle("is-current", i === index));
-    const pauseExcept = keep => videos.forEach((video, i) => {
-      if (i !== keep) {
-        try { video.pause(); } catch (_) {}
-      }
-    });
-    const findNext = from => {
+
+    function nextAvailable(from) {
       for (let step = 1; step <= videos.length; step += 1) {
-        const candidate = (from + step + videos.length) % videos.length;
+        const candidate = (from + step) % videos.length;
         if (!failedVideos.has(candidate)) return candidate;
       }
       return -1;
-    };
+    }
+
+    function beginNext(from = current) {
+      if (switching || document.hidden || reducedMotion) return;
+      const next = nextAvailable(from);
+      if (next < 0) return;
+      switching = true;
+      playCandidate(next);
+    }
+
+    function handleFailure(index) {
+      if (pending !== index) return;
+      clearLoadTimer();
+      failedVideos.add(index);
+      videos[index].dataset.videoState = "error";
+      try { videos[index].pause(); } catch (_) {}
+      pending = -1;
+      switching = false;
+      if (failedVideos.size < videos.length) beginNext(index);
+    }
 
     function playCandidate(index) {
-      if (!videos.length || document.hidden || reducedMotion || pending !== -1) return;
-      const target = failedVideos.has(index) ? findNext(index) : index;
-      if (target < 0) return;
-      const video = videos[target];
-      pending = target;
+      if (!videos.length || document.hidden || reducedMotion || pending !== -1) {
+        switching = false;
+        return;
+      }
+      if (failedVideos.has(index)) {
+        switching = false;
+        beginNext(index);
+        return;
+      }
+      const video = videos[index];
+      pending = index;
       video.dataset.videoState = "loading";
       video.muted = true;
       video.defaultMuted = true;
       video.playsInline = true;
+      video.loop = false;
+      video.removeAttribute("loop");
       video.setAttribute("muted", "");
       video.setAttribute("playsinline", "");
       video.setAttribute("webkit-playsinline", "");
 
       const source = video.dataset.videoSource;
       if (!source) {
-        handleFailure(target);
+        handleFailure(index);
         return;
       }
       if (video.dataset.loadedSource !== source) {
@@ -187,86 +208,69 @@
         video.load();
       }
 
-      clearTimers();
+      clearLoadTimer();
       loadTimer = window.setTimeout(() => {
-        if (pending === target && video.dataset.videoState !== "playing") handleFailure(target);
+        if (pending === index && video.dataset.videoState !== "playing") handleFailure(index);
       }, loadTimeout);
 
       const attemptPlay = () => {
-        if (pending !== target || document.hidden) return;
+        if (pending !== index || document.hidden) return;
         video.play().catch(() => {
           video.dataset.videoState = "blocked";
-          // Muted autoplay is normally permitted. If a browser blocks it, keep the
-          // current clip visible and retry after the visitor's first interaction.
-          if (userGestureSeen) handleFailure(target);
+          if (userGestureSeen) handleFailure(index);
         });
       };
       if (video.readyState >= 2) attemptPlay();
-      else {
-        video.addEventListener("canplay", attemptPlay, { once: true });
-        video.addEventListener("error", () => {
-          if (pending === target) handleFailure(target);
-        }, { once: true });
-      }
-    }
-
-    function handleFailure(index) {
-      if (pending !== index) return;
-      clearTimers();
-      failedVideos.add(index);
-      videos[index].dataset.videoState = "error";
-      try { videos[index].pause(); } catch (_) {}
-      pending = -1;
-      if (failedVideos.size >= videos.length) return;
-      playCandidate(findNext(index));
+      else video.addEventListener("canplay", attemptPlay, { once: true });
     }
 
     videos.forEach((video, index) => {
       video.addEventListener("playing", () => {
         if (pending !== index) return;
-        clearTimers();
+        clearLoadTimer();
         const previous = current;
         current = index;
         pending = -1;
-        failedVideos.delete(index);
+        switching = false;
         video.dataset.videoState = "playing";
+        video.loop = false;
         video.style.zIndex = "1";
         video.classList.add("is-visible");
-        if (previous >= 0 && previous !== index) videos[previous].style.zIndex = "0";
-        markProgress(index);
-
-        // Let the CSS crossfade complete before pausing the previous footage.
         if (previous >= 0 && previous !== index) {
-          window.setTimeout(() => {
-            if (current !== previous) {
-              videos[previous].classList.remove("is-visible");
-              try { videos[previous].pause(); } catch (_) {}
-            }
-          }, 1250);
+          videos[previous].style.zIndex = "0";
+          videos[previous].classList.remove("is-visible");
+          try { videos[previous].pause(); } catch (_) {}
         }
-        rotationTimer = window.setTimeout(() => {
-          if (current === index && pending === -1) playCandidate((index + 1) % videos.length);
-        }, durations);
+        markProgress(index);
       });
+
+      video.addEventListener("timeupdate", () => {
+        if (current !== index || switching || document.hidden) return;
+        if (video.currentTime >= maxSceneSeconds) beginNext(index);
+      });
+
+      video.addEventListener("ended", () => {
+        if (current === index && !switching) beginNext(index);
+      });
+
       video.addEventListener("error", () => {
         if (pending === index) handleFailure(index);
-        else if (current === index) {
+        else if (current === index && !switching) {
           failedVideos.add(index);
-          playCandidate(findNext(index));
+          beginNext(index);
         }
       });
     });
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        clearTimers();
+        clearLoadTimer();
         videos.forEach(video => { try { video.pause(); } catch (_) {} });
       } else if (current >= 0) {
-        pending = -1;
         const active = videos[current];
         active.play().catch(() => {});
-        rotationTimer = window.setTimeout(() => playCandidate((current + 1) % videos.length), durations);
       } else {
+        switching = false;
         playCandidate(0);
       }
     });
