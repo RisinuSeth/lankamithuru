@@ -156,6 +156,19 @@
       return -1;
     }
 
+    // Warm the following scene while the current one is still on screen.
+    // This prevents a loading gap when the carousel advances.
+    function warmVideo(index) {
+      if (index < 0 || failedVideos.has(index)) return;
+      const video = videos[index];
+      const source = video.dataset.videoSource;
+      if (!source || video.dataset.loadedSource === source) return;
+      video.preload = "auto";
+      video.src = source;
+      video.dataset.loadedSource = source;
+      video.load();
+    }
+
     function beginNext(from = current) {
       if (switching || document.hidden || reducedMotion) return;
       const next = nextAvailable(from);
@@ -234,14 +247,21 @@
         switching = false;
         video.dataset.videoState = "playing";
         video.loop = false;
-        video.style.zIndex = "1";
+        video.style.zIndex = "2";
         video.classList.add("is-visible");
         if (previous >= 0 && previous !== index) {
-          videos[previous].style.zIndex = "0";
-          videos[previous].classList.remove("is-visible");
-          try { videos[previous].pause(); } catch (_) {}
+          const outgoing = videos[previous];
+          outgoing.style.zIndex = "1";
+          outgoing.classList.remove("is-visible");
+          // Keep the outgoing frame available throughout the crossfade.
+          window.setTimeout(() => {
+            try { outgoing.pause(); } catch (_) {}
+            outgoing.style.zIndex = "0";
+          }, 1200);
         }
         markProgress(index);
+        const upcoming = nextAvailable(index);
+        if (upcoming !== index) warmVideo(upcoming);
       });
 
       video.addEventListener("timeupdate", () => {
