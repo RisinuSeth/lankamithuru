@@ -49,3 +49,12 @@ body{background:var(--paper);color:var(--ink)}
 .subpage-hero-panel{border-color:#E8D5D0}.subpage-hero-panel strong{color:#278C91}
 .subpage-hero-panel span{color:#718080}.edu-pathway{color:#278C91}.edu-pathway b{color:#EA4B42}
 @media(max-width:650px){.main-nav{background:var(--paper);border-color:#E7DEDA}.main-nav a{color:#58686A}.site-header{background:rgba(251,248,245,.97)}}
+
+/* Homepage hero fallback: keep the Sri Lankan photo after the palette background override */
+.hero-video-backdrop{
+  background-color:#263638;
+  background-image:url("https://images.unsplash.com/photo-1588598198321-9735fd5f7b5a?auto=format&fit=crop&w=2000&q=90");
+  background-position:center 46%;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
