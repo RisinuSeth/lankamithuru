@@ -17,7 +17,7 @@ const menu=$("#menuToggle"),nav=$(".main-nav");menu?.addEventListener("click",()
  const slides=[...stage.querySelectorAll(".film-slide")],dots=[...stage.querySelectorAll(".film-dot")],count=document.querySelector("#filmCount"),pause=document.querySelector("#filmPause");
  let current=0,paused=window.matchMedia("(prefers-reduced-motion: reduce)").matches,timer=null;
  const playVideo=(slide,active)=>{const v=slide.querySelector("video");if(!v)return;if(active){v.play().catch(()=>{});}else{v.pause();}};
- function show(index){current=(index+slides.length)%slides.length;slides.forEach((s,i)=>{const active=i===current;s.classList.toggle("is-active",active);s.setAttribute("aria-hidden",String(!active));playVideo(s,active)});dots.forEach((d,i)=>{const active=i===current;d.classList.toggle("is-active",active);d.setAttribute("aria-pressed",String(active))});if(count)count.textContent=String(current+1).padStart(2,"0")+" / 03";}
+ function show(index){current=(index+slides.length)%slides.length;slides.forEach((s,i)=>{const active=i===current;s.classList.toggle("is-active",active);s.setAttribute("aria-hidden",String(!active));playVideo(s,active && !paused)});dots.forEach((d,i)=>{const active=i===current;d.classList.toggle("is-active",active);d.setAttribute("aria-pressed",String(active))});if(count)count.textContent=String(current+1).padStart(2,"0")+" / 03";}
  function stop(){if(timer){clearInterval(timer);timer=null;}}
  function start(){stop();if(!paused)timer=setInterval(()=>show(current+1),7200);}
  dots.forEach((d,i)=>d.addEventListener("click",()=>{show(i);start()}));
