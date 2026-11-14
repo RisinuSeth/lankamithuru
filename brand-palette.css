@@ -58,3 +58,26 @@ body{background:var(--paper);color:var(--ink)}
   background-size:cover;
   background-repeat:no-repeat;
 }
+
+
+/* Hero media fix: never let an unloaded video cover the still-image fallback.
+   A video becomes visible only after the browser confirms playback. */
+.hero-video-backdrop{background-color:#263638!important}
+.hero-bg-fallback{z-index:0!important;opacity:1!important}
+.hero-bg-video{
+  z-index:1!important;
+  opacity:0!important;
+  transition:opacity 1.4s ease!important;
+  background:transparent!important;
+}
+.hero-bg-video.is-visible[data-video-state="playing"]{
+  opacity:1!important;
+}
+.hero-bg-video.has-video-error{opacity:0!important}
+.hero-video-shade{
+  z-index:2!important;
+  background:
+    linear-gradient(90deg,rgba(20,35,37,.58) 0%,rgba(20,35,37,.34) 48%,rgba(20,35,37,.12) 100%),
+    linear-gradient(0deg,rgba(20,35,37,.24),transparent 55%,rgba(20,35,37,.10))!important;
+}
+.hero-video-caption,.hero-video-progress{z-index:3!important}
