@@ -20,3 +20,11 @@ html{scroll-padding-top:100px}body{background:#fff;color:var(--ink)}
 @media(max-width:650px){.site-header{margin:0 7px;border-radius:0 0 18px 18px;top:4px}.main-nav{border-radius:0 0 20px 20px;box-shadow:0 12px 22px #173b6810}.hero{padding-top:54px}.photo-main{border-radius:23px}.photo-small{border-radius:18px}.division-card{border-radius:20px}.division-image{border-radius:14px}.destination-feature{border-radius:22px}.hub-section,.join-section{border-radius:22px;margin-left:7px;margin-right:7px}.hub-tile{border-radius:18px}.edu-resources>a{border-radius:13px}.site-footer{border-radius:24px 24px 0 0}}
 
 .destination-stamp span,.underlined-link span{color:#347bc0}.division-number{color:#64809e}.eyebrow-line{background:#397acb}.hero-sun{display:none}.search-symbol{color:#347bc0}
+
+/* Keep the visual language clean: remove decorative filler and keep the content in focus. */
+.announcement{display:none}
+.floating-note,.photo-small,.hero-bottom,.hero-proof,.destination-stamp,.tile-art,.footer-flower{display:none!important}
+.hero-art{height:430px}
+.photo-main{width:100%;height:100%;right:0;top:0;border-radius:30px}
+.hub-tile{box-shadow:none}
+@media(max-width:650px){.hero-art{height:280px}.photo-main{width:100%;height:100%;right:0}.hero{padding-top:46px}}
