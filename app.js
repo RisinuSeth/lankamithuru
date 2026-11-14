@@ -247,11 +247,11 @@
         switching = false;
         video.dataset.videoState = "playing";
         video.loop = false;
-        video.style.zIndex = "2";
+        video.style.zIndex = "0";
         video.classList.add("is-visible");
         if (previous >= 0 && previous !== index) {
           const outgoing = videos[previous];
-          outgoing.style.zIndex = "1";
+          outgoing.style.zIndex = "0";
           outgoing.classList.remove("is-visible");
           // Keep the outgoing frame available throughout the crossfade.
           window.setTimeout(() => {
