@@ -21,3 +21,16 @@
 .hero .button-light{background:#ffffff18;border-color:#ffffff80;color:#fff;backdrop-filter:blur(10px)}.hero .button-light:hover{background:#ffffff2b}
 @media(max-width:650px){.hero{min-height:calc(100svh - 74px);padding:85px 7% 90px;border-radius:0 0 23px 23px}.hero h1{font-size:clamp(48px,12vw,68px);letter-spacing:-3.6px}.hero-intro{font-size:13px;max-width:95%}.hero-video-shade{background:linear-gradient(90deg,rgba(5,24,44,.78),rgba(7,31,55,.42)),linear-gradient(0deg,rgba(5,24,44,.4),transparent 60%)}.hero-video-caption{left:7%;right:auto;bottom:23px;font-size:8px}.hero-video-progress{right:5%;gap:6px}.hero-video-progress span{height:17px}.hero-video-progress span.is-current{height:31px}}
 @media(prefers-reduced-motion:reduce){.hero-bg-video{transition:none;transform:none}.hero-video-progress{display:none}}
+
+
+/* Video reliability and explicit stacking: keep footage above the hero paint layer */
+.hero{isolation:isolate}
+.hero-video-backdrop{z-index:0;pointer-events:none}
+.hero-copy{position:relative;z-index:3}
+.hero-bg-video{z-index:0;display:block;background:#173c45}
+.hero-video-shade{z-index:1;pointer-events:none}
+.hero-video-caption,.hero-video-progress{z-index:2}
+.hero-bg-video.has-video-error{opacity:0}
+@media(prefers-reduced-motion:reduce){
+  .hero-bg-video{transition:none}
+}
