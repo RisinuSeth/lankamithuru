@@ -88,3 +88,17 @@ body{background:var(--paper);color:var(--ink)}
 @media(prefers-reduced-motion:reduce){
   .hero-bg-video{transition:none!important;transform:none!important}
 }
+
+/* Sign-in CTA: coral at rest and on hover */
+.header-cta.signin-cta,
+.header-cta.signin-cta:hover,
+.header-cta.signin-cta:focus-visible{
+  background:#EA4B42;
+  border-color:#EA4B42;
+  color:#fff;
+}
+.header-cta.signin-cta:hover{box-shadow:0 5px 14px #EA4B4230}
+@media(max-width:650px){
+  .header-cta.signin-cta{display:inline-flex;align-items:center;padding:9px 11px;font-size:10px}
+  .header-actions{gap:10px}
+}
