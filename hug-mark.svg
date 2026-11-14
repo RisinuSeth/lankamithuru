@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title"><title id="title">LankaMithuru caring heart</title><path d="M32 25.2C25.6 17.1 12.2 18.3 10.4 29.1c-1.6 9.4 9.2 17.4 21.6 25.1 12.4-7.7 23.2-15.7 21.6-25.1C51.8 18.3 38.4 17.1 32 25.2Z" fill="#347bc0"/><path d="M7.3 31.2c.9 10.8 8.5 19.1 19.2 21.5 2.3.5 4.3.4 5.5-.5 1.1-.8 1.1-2.4.1-3.4-1.1-1.1-3-1.3-4.8-1.9-5.8-1.9-9.7-5.3-12.4-10.4M56.7 31.2c-.9 10.8-8.5 19.1-19.2 21.5-2.3.5-4.3.4-5.5-.5-1.1-.8-1.1-2.4-.1-3.4 1.1-1.1 3-1.3 4.8-1.9 5.8-1.9 9.7-5.3 12.4-10.4" fill="none" stroke="#6fa6d9" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 28.7c1.1-4.4 4.4-7.2 8.7-7.7M46.5 28.7c-1.1-4.4-4.4-7.2-8.7-7.7" fill="none" stroke="#d9ebfb" stroke-width="2.4" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" shape-rendering="geometricPrecision">
+  <defs>
+    <path id="heart" fill="#EA4B42" stroke="none" d="M 500 248 C 472 212 442 188 398 188 C 344 188 309 226 309 275 C 309 348 412 422 500 496 C 588 422 691 348 691 275 C 691 226 656 188 602 188 C 558 188 528 212 500 248 Z"/>
+    <g id="left-hand" fill="#5FC0C7" stroke="none">
+      <path d="M 226 285 C 240.4 285 252 296.6 252 311 L 252 448 C 252 465 260 476 276 488 L 378 552 C 385 556 392 552 391 544 C 390 538 385 534 378 529 L 291 471 C 281 463 281 448 291 439 C 300 431 314 432 324 440 L 468 556 C 476 562 479 568 479 578 L 479 810 C 452 732 412 682 332 622 C 256 565 192 532 192 492 C 192 475 200 462 200 442 L 200 311 C 200 296.6 211.6 285 226 285 Z"/>
+    </g>
+  </defs>
+  <use href="#heart"/>
+  <use href="#left-hand"/>
+  <use href="#left-hand" transform="translate(1000 0) scale(-1 1)"/>
+</svg>
