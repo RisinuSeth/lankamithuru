@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#EA4B42">
+  <meta name="description" content="Sign in to LankaMithuru.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Sign in — LankaMithuru</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="brand-palette.css">
+  <link rel="stylesheet" href="signin.css">
+  <script defer src="signin.js"></script>
+</head>
+<body class="signin-page">
+  <header class="site-header signin-header">
+    <a class="brand" href="index.html" aria-label="LankaMithuru home">
+      <span class="brand-mark" aria-hidden="true"><img src="hug-mark.svg" alt=""></span>
+      <span class="brand-word">Lanka<span>Mithuru</span></span>
+    </a>
+    <a class="signin-back" href="index.html">Back to home <span>↗</span></a>
+  </header>
+  <main class="signin-main">
+    <section class="signin-story" aria-label="Welcome to LankaMithuru">
+      <div class="signin-story-content">
+        <span class="signin-kicker"><i></i> ONE ISLAND. ONE CONNECTED PLATFORM.</span>
+        <h1>Your Sri Lanka<br>starts <em>here.</em></h1>
+        <p>Discover places, connect with people and find opportunities across the island — all in one place.</p>
+        <div class="signin-story-foot"><span>ආයුබෝවන්</span><span>ROOTED HERE. OPEN TO EVERYONE.</span></div>
+      </div>
+      <div class="signin-orbit signin-orbit-one"></div><div class="signin-orbit signin-orbit-two"></div>
+    </section>
+    <section class="signin-form-side">
+      <div class="signin-card">
+        <a class="signin-mobile-brand brand" href="index.html"><span class="brand-mark"><img src="hug-mark.svg" alt=""></span><span class="brand-word">Lanka<span>Mithuru</span></span></a>
+        <span class="signin-eyebrow">WELCOME BACK</span>
+        <h2>Sign in</h2>
+        <p class="signin-subtitle">Good to have you here. Enter your details to continue.</p>
+        <form id="signinForm" novalidate>
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+          <div class="password-label"><label for="password">Password</label><a href="mailto:hello@lankamithuru.lk?subject=Password%20help">Forgot password?</a></div>
+          <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+          <button class="signin-submit" type="submit">Sign in <span>↗</span></button>
+          <p class="signin-feedback" id="signinFeedback" role="status" aria-live="polite"></p>
+        </form>
+        <div class="signin-divider"><span>YOUR ISLAND. YOUR COMMUNITY.</span></div>
+        <p class="signin-help">Need a hand? <a href="mailto:hello@lankamithuru.lk">Contact our team</a></p>
+      </div>
+      <p class="signin-legal">© <span id="signinYear"></span> LankaMithuru. Built with care in Sri Lanka.</p>
+    </section>
+  </main>
+</body>
+</html>
