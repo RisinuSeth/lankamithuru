@@ -134,6 +134,7 @@
     const bars = $$(".hero-video-progress span", hero);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let current = 0;
+    const failedVideos = new Set();
     let timer = 0;
     let loadTimer = 0;
     let userGestureSeen = false;
@@ -149,8 +150,15 @@
     const pauseAll = () => videos.forEach(video => { try { video.pause(); } catch (_) {} });
     const failover = () => {
       stopTimers();
-      const next = (current + 1) % videos.length;
-      if (next === current) return;
+      failedVideos.add(current);
+      if (failedVideos.size >= videos.length) {
+        pauseAll();
+        videos.forEach(video => video.classList.remove("is-visible"));
+        bars.forEach(bar => bar.classList.remove("is-current"));
+        return; // keep the clean solid hero background; never show a broken poster.
+      }
+      let next = (current + 1) % videos.length;
+      while (failedVideos.has(next)) next = (next + 1) % videos.length;
       start(next);
     };
     function start(index) {
@@ -199,6 +207,7 @@
         if (index !== current) return;
         window.clearTimeout(loadTimer);
         video.dataset.videoState = "playing";
+        failedVideos.delete(index);
         timer = window.setTimeout(() => start(current + 1), durations);
       });
       video.addEventListener("error", () => {
