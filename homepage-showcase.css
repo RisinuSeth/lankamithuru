@@ -34,3 +34,12 @@
 @media(prefers-reduced-motion:reduce){
   .hero-bg-video{transition:none}
 }
+
+/* Explicit DOM image fallback and deterministic hero stacking */
+.hero{position:relative;isolation:isolate;background:#263638!important}
+.hero-copy{position:relative!important;z-index:5!important}
+.hero-video-backdrop{position:absolute!important;inset:0!important;z-index:1!important;display:block!important;overflow:hidden}
+.hero-bg-fallback{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 46%;z-index:0}
+.hero-bg-video{z-index:1!important}
+.hero-video-shade{z-index:2!important}
+.hero-video-caption,.hero-video-progress{z-index:3!important}
