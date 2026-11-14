@@ -265,6 +265,8 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         clearLoadTimer();
+        pending = -1;
+        switching = false;
         videos.forEach(video => { try { video.pause(); } catch (_) {} });
       } else if (current >= 0) {
         const active = videos[current];
