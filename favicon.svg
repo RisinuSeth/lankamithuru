@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="12.5" r="6" fill="#2B70B8"/><path d="M31.8 21.5c-4.8 2.1-7.8 6.1-8.2 11.2-.3 4.5 1.7 8.1 5.3 10.7l-6.5 9.3M33 22c6.5 1.2 11.4 5.7 13.4 11.7 1.6 4.8.1 9.5-3.7 12.4-3.3 2.5-7.6 2.5-11.4.6-2.2-1.1-4-2.8-5.5-4.9" fill="none" stroke="#2B70B8" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.5 32.2c-5.3 2.1-8.3 6.2-8.1 10.8.2 4.4 3.5 7.4 8.4 7.6 4.1.2 7.3-1.8 10.1-5.4M44.5 31.4c5.4 2.2 8.3 6.1 8.1 10.8-.2 4.4-3.5 7.4-8.4 7.6-4.1.2-7.3-1.8-10.1-5.4" fill="none" stroke="#72A7DB" stroke-width="5.2" stroke-linecap="round"/><path d="M24.5 53.5c4.9 3.1 10.2 3.1 15 0" fill="none" stroke="#2B70B8" stroke-width="4.2" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" shape-rendering="geometricPrecision">
+  <defs>
+    <path id="heart" fill="#EA4B42" stroke="none" d="M 500 248 C 472 212 442 188 398 188 C 344 188 309 226 309 275 C 309 348 412 422 500 496 C 588 422 691 348 691 275 C 691 226 656 188 602 188 C 558 188 528 212 500 248 Z"/>
+    <g id="left-hand" fill="#5FC0C7" stroke="none">
+      <path d="M 226 285 C 240.4 285 252 296.6 252 311 L 252 448 C 252 465 260 476 276 488 L 378 552 C 385 556 392 552 391 544 C 390 538 385 534 378 529 L 291 471 C 281 463 281 448 291 439 C 300 431 314 432 324 440 L 468 556 C 476 562 479 568 479 578 L 479 810 C 452 732 412 682 332 622 C 256 565 192 532 192 492 C 192 475 200 462 200 442 L 200 311 C 200 296.6 211.6 285 226 285 Z"/>
+    </g>
+  </defs>
+  <use href="#heart"/>
+  <use href="#left-hand"/>
+  <use href="#left-hand" transform="translate(1000 0) scale(-1 1)"/>
+</svg>
