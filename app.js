@@ -126,121 +126,156 @@
     openSearch(link.dataset.searchTerm || "");
   }));
 
-  // Resilient video rotation: one active clip at a time, with automatic failover.
-  // Pexels' own download endpoints redirect to the currently hosted MP4 rendition.
+  // Hero video carousel: prepare the next clip before switching the visible footage.
+  // The currently playing video stays on screen until the next one is actually playing.
   const hero = $(".hero-video-backdrop");
   if (hero) {
     const videos = $$(".hero-bg-video", hero);
     const bars = $$(".hero-video-progress span", hero);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let current = 0;
-    const failedVideos = new Set();
-    let timer = 0;
+    const durations = 18000;
+    const loadTimeout = 22000;
+    let current = -1;
+    let pending = -1;
+    let rotationTimer = 0;
     let loadTimer = 0;
     let userGestureSeen = false;
-    const durations = 16000;
+    const failedVideos = new Set();
 
-    const stopTimers = () => {
-      window.clearTimeout(timer);
+    const clearTimers = () => {
+      window.clearTimeout(rotationTimer);
       window.clearTimeout(loadTimer);
-      timer = 0;
+      rotationTimer = 0;
       loadTimer = 0;
     };
-    const markCurrent = index => bars.forEach((bar, i) => bar.classList.toggle("is-current", i === index));
-    const pauseAll = () => videos.forEach(video => { try { video.pause(); } catch (_) {} });
-    const failover = () => {
-      stopTimers();
-      failedVideos.add(current);
-      if (failedVideos.size >= videos.length) {
-        pauseAll();
-        videos.forEach(video => video.classList.remove("is-visible"));
-        bars.forEach(bar => bar.classList.remove("is-current"));
-        return; // keep the clean solid hero background; never show a broken poster.
+    const markProgress = index => bars.forEach((bar, i) => bar.classList.toggle("is-current", i === index));
+    const pauseExcept = keep => videos.forEach((video, i) => {
+      if (i !== keep) {
+        try { video.pause(); } catch (_) {}
       }
-      let next = (current + 1) % videos.length;
-      while (failedVideos.has(next)) next = (next + 1) % videos.length;
-      start(next);
+    });
+    const findNext = from => {
+      for (let step = 1; step <= videos.length; step += 1) {
+        const candidate = (from + step + videos.length) % videos.length;
+        if (!failedVideos.has(candidate)) return candidate;
+      }
+      return -1;
     };
-    function start(index) {
-      if (!videos.length || document.hidden || reducedMotion) return;
-      stopTimers();
-      pauseAll();
-      let target = (index + videos.length) % videos.length;
-      let checked = 0;
-      while (failedVideos.has(target) && checked < videos.length) {
-        target = (target + 1) % videos.length;
-        checked += 1;
-      }
-      if (checked >= videos.length) {
-        videos.forEach(video => video.classList.remove("is-visible"));
-        bars.forEach(bar => bar.classList.remove("is-current"));
-        return;
-      }
-      current = target;
-      const video = videos[current];
-      videos.forEach((item, i) => {
-        item.classList.toggle("is-visible", i === current);
-        item.dataset.videoState = i === current ? "loading" : "idle";
-      });
-      markCurrent(current);
+
+    function playCandidate(index) {
+      if (!videos.length || document.hidden || reducedMotion || pending !== -1) return;
+      const target = failedVideos.has(index) ? findNext(index) : index;
+      if (target < 0) return;
+      const video = videos[target];
+      pending = target;
+      video.dataset.videoState = "loading";
       video.muted = true;
       video.defaultMuted = true;
       video.playsInline = true;
       video.setAttribute("muted", "");
       video.setAttribute("playsinline", "");
       video.setAttribute("webkit-playsinline", "");
+
       const source = video.dataset.videoSource;
-      if (!source) { failover(); return; }
+      if (!source) {
+        handleFailure(target);
+        return;
+      }
       if (video.dataset.loadedSource !== source) {
         video.src = source;
         video.dataset.loadedSource = source;
         video.load();
       }
+
+      clearTimers();
       loadTimer = window.setTimeout(() => {
-        if (current === index && video.dataset.videoState !== "playing") failover();
-      }, 12000);
-      const play = () => {
-        if (current !== index || document.hidden) return;
-        const result = video.play();
-        if (result && typeof result.catch === "function") {
-          result.catch(() => {
-            video.dataset.videoState = "blocked";
-            if (userGestureSeen) failover();
-          });
-        }
+        if (pending === target && video.dataset.videoState !== "playing") handleFailure(target);
+      }, loadTimeout);
+
+      const attemptPlay = () => {
+        if (pending !== target || document.hidden) return;
+        video.play().catch(() => {
+          video.dataset.videoState = "blocked";
+          // Muted autoplay is normally permitted. If a browser blocks it, keep the
+          // current clip visible and retry after the visitor's first interaction.
+          if (userGestureSeen) handleFailure(target);
+        });
       };
-      if (video.readyState >= 2) play();
-      else video.addEventListener("canplay", play, { once: true });
+      if (video.readyState >= 2) attemptPlay();
+      else {
+        video.addEventListener("canplay", attemptPlay, { once: true });
+        video.addEventListener("error", () => {
+          if (pending === target) handleFailure(target);
+        }, { once: true });
+      }
+    }
+
+    function handleFailure(index) {
+      if (pending !== index) return;
+      clearTimers();
+      failedVideos.add(index);
+      videos[index].dataset.videoState = "error";
+      try { videos[index].pause(); } catch (_) {}
+      pending = -1;
+      if (failedVideos.size >= videos.length) return;
+      playCandidate(findNext(index));
     }
 
     videos.forEach((video, index) => {
       video.addEventListener("playing", () => {
-        if (index !== current) return;
-        window.clearTimeout(loadTimer);
-        video.dataset.videoState = "playing";
+        if (pending !== index) return;
+        clearTimers();
+        const previous = current;
+        current = index;
+        pending = -1;
         failedVideos.delete(index);
-        timer = window.setTimeout(() => start(current + 1), durations);
+        video.dataset.videoState = "playing";
+        video.classList.add("is-visible");
+        markProgress(index);
+
+        // Let the CSS crossfade complete before pausing the previous footage.
+        if (previous >= 0 && previous !== index) {
+          window.setTimeout(() => {
+            if (current !== previous) {
+              videos[previous].classList.remove("is-visible");
+              try { videos[previous].pause(); } catch (_) {}
+            }
+          }, 1250);
+        }
+        rotationTimer = window.setTimeout(() => {
+          if (current === index && pending === -1) playCandidate((index + 1) % videos.length);
+        }, durations);
       });
       video.addEventListener("error", () => {
-        if (index === current) {
-          video.dataset.videoState = "error";
-          failover();
+        if (pending === index) handleFailure(index);
+        else if (current === index) {
+          failedVideos.add(index);
+          playCandidate(findNext(index));
         }
       });
     });
+
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) { stopTimers(); pauseAll(); }
-      else start(current);
+      if (document.hidden) {
+        clearTimers();
+        videos.forEach(video => { try { video.pause(); } catch (_) {} });
+      } else if (current >= 0) {
+        pending = -1;
+        const active = videos[current];
+        active.play().catch(() => {});
+        rotationTimer = window.setTimeout(() => playCandidate((current + 1) % videos.length), durations);
+      } else {
+        playCandidate(0);
+      }
     });
+
     document.addEventListener("pointerdown", () => {
       userGestureSeen = true;
-      const active = videos[current];
-      if (active && active.dataset.videoState !== "playing" && !document.hidden && !reducedMotion) {
-        active.muted = true;
-        active.play().catch(() => {});
-      }
+      if (pending >= 0 && !document.hidden) videos[pending].play().catch(() => {});
+      else if (current >= 0 && !document.hidden && videos[current].paused) videos[current].play().catch(() => {});
     }, { once: true, passive: true });
-    if (!reducedMotion) start(0);
+
+    if (!reducedMotion) playCandidate(0);
   }
 
   // Crossfade through real scenes from Sri Lanka for Explore, Hub and Edu.
