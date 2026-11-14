@@ -1,139 +1,225 @@
-const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
-const modal=$("#searchModal"),searchInput=$("#siteSearch"),results=$("#searchResults"),toast=$("#toast");let toastTimer;
-$("#year").textContent=new Date().getFullYear();
-const searchable=[
-{title:"Explore Sri Lanka",terms:"explore destinations places travel tourism island",target:"explore.html",type:"EXPLORE"},{title:"Beaches & coast",terms:"beach sea ocean surf coast",target:"explore.html#categories",type:"EXPLORE"},{title:"Hills & nature",terms:"mountain hills nature forest waterfall",target:"explore.html#categories",type:"EXPLORE"},{title:"Culture & heritage",terms:"culture heritage history ancient",target:"explore.html#categories",type:"EXPLORE"},{title:"Food & flavour",terms:"food restaurants cuisine flavour",target:"explore.html#categories",type:"EXPLORE"},{title:"Places to stay",terms:"hotels accommodation stays guest houses",target:"explore.html#categories",type:"EXPLORE"},{title:"Local businesses",terms:"business shop local directory companies",target:"hub.html#directory",type:"HUB"},{title:"Services",terms:"services professionals repair help",target:"hub.html#directory",type:"HUB"},{title:"Jobs & opportunities",terms:"jobs careers opportunities vacancies",target:"hub.html#opportunities",type:"HUB"},{title:"Events & happenings",terms:"events happenings activities calendar",target:"hub.html#opportunities",type:"HUB"},{title:"Advanced Level resources",terms:"a/l al advanced level subjects notes",target:"edu.html#resources",type:"EDU"},{title:"Ordinary Level resources",terms:"o/l ol ordinary level subjects notes",target:"edu.html#resources",type:"EDU"},{title:"Past papers",terms:"past papers exam answers revision",target:"edu.html#resources",type:"EDU"},{title:"Study guides",terms:"study guides learning resources",target:"edu.html#resources",type:"EDU"},{title:"Courses & skills",terms:"courses skills training learning",target:"edu.html#resources",type:"EDU"}];
-function openSearch(q=""){if(!modal)return;modal.classList.add("open");modal.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";searchInput.value=q;renderSearch(q);setTimeout(()=>searchInput.focus(),80)}
-function closeSearch(){if(!modal)return;modal.classList.remove("open");modal.setAttribute("aria-hidden","true");document.body.style.overflow=""}
-function renderSearch(q){const term=q.trim().toLowerCase(),matches=term?searchable.filter(x=>(x.title+" "+x.terms).toLowerCase().includes(term)):searchable.slice(0,5);results.innerHTML='<span class="results-label">'+(term?(matches.length?"MATCHING DISCOVERIES":"NO MATCHES YET"):"QUICK DISCOVERIES")+'</span>';if(!matches.length){const p=document.createElement("p");p.className="search-hint";p.textContent="Try travel, business, jobs or study.";results.append(p);return}matches.slice(0,8).forEach(x=>{const a=document.createElement("a");a.href=x.target;a.className="search-result-link";const t=document.createElement("span");t.textContent=x.title;const m=document.createElement("small");m.textContent=x.type;const b=document.createElement("b");b.textContent="↗";a.append(t,m,b);results.append(a)})}
-$("#openSearch")?.addEventListener("click",()=>openSearch());$("#heroSearch")?.addEventListener("click",()=>openSearch());$("#closeSearch")?.addEventListener("click",closeSearch);searchInput?.addEventListener("input",e=>renderSearch(e.target.value));modal?.addEventListener("click",e=>{if(e.target===modal)closeSearch()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal?.classList.contains("open"))closeSearch();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
-$$("[data-search-term]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();openSearch(a.dataset.searchTerm||"")}));
-const menu=$("#menuToggle"),nav=$(".main-nav");menu?.addEventListener("click",()=>{const open=menu.getAttribute("aria-expanded")==="true";menu.setAttribute("aria-expanded",String(!open));nav?.classList.toggle("open",!open)});$$(".main-nav a").forEach(a=>a.addEventListener("click",()=>{nav?.classList.remove("open");menu?.setAttribute("aria-expanded","false")}));
+(() => {
+  "use strict";
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-/* Sri Lankan hero video rotation — advance only after a clip actually plays */
-(()=>{
- const hero=document.querySelector(".hero-video-backdrop");
- if(!hero)return;
- const videos=[...hero.querySelectorAll(".hero-bg-video")];
- const bars=[...hero.querySelectorAll(".hero-video-progress span")];
- if(!videos.length)return;
+  const year = $("#year");
+  if (year) year.textContent = String(new Date().getFullYear());
 
- let current=0, timer=null, pageHidden=document.hidden, playing=false, failed=new Set();
- const PLAY_TIME=12000, LOAD_TIMEOUT=22000;
- const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
- const stop=()=>{if(timer!==null){clearTimeout(timer);timer=null;}};
- const setProgress=(index)=>bars.forEach((bar,i)=>bar.classList.toggle("is-current",i===index));
- const schedule=(delay)=>{stop();if(!pageHidden)timer=setTimeout(()=>activate(current+1),delay);};
+  // Mobile navigation works on every page without assuming page-specific markup.
+  const menuButton = $("#menuToggle");
+  const nav = $(".main-nav");
+  if (menuButton && nav) {
+    menuButton.addEventListener("click", () => {
+      const expanded = menuButton.getAttribute("aria-expanded") === "true";
+      menuButton.setAttribute("aria-expanded", String(!expanded));
+      menuButton.setAttribute("aria-label", expanded ? "Open navigation" : "Close navigation");
+      nav.classList.toggle("open", !expanded);
+    });
+    $$("a", nav).forEach(link => link.addEventListener("click", () => {
+      nav.classList.remove("open");
+      menuButton.setAttribute("aria-expanded", "false");
+      menuButton.setAttribute("aria-label", "Open navigation");
+    }));
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && nav.classList.contains("open")) {
+        nav.classList.remove("open");
+        menuButton.setAttribute("aria-expanded", "false");
+        menuButton.setAttribute("aria-label", "Open navigation");
+        menuButton.focus();
+      }
+    });
+  }
 
- videos.forEach((video,index)=>{
-   video.muted=true;
-   video.defaultMuted=true;
-   video.playsInline=true;
-   video.loop=true;
-   video.controls=false;
-   ["muted","playsinline","webkit-playsinline"].forEach(attr=>video.setAttribute(attr,""));
+  // One searchable index shared by the homepage and the three divisions.
+  const searchable = [
+    { title:"Explore Sri Lanka", terms:"destinations places travel tourism island", target:"explore.html", type:"EXPLORE" },
+    { title:"Beaches & coast", terms:"beach sea ocean surf coast", target:"explore.html#categories", type:"EXPLORE" },
+    { title:"Hills & nature", terms:"mountain hills nature forest waterfall", target:"explore.html#categories", type:"EXPLORE" },
+    { title:"Culture & heritage", terms:"culture heritage history ancient", target:"explore.html#categories", type:"EXPLORE" },
+    { title:"Food & flavour", terms:"food restaurants cuisine cafes", target:"explore.html#categories", type:"EXPLORE" },
+    { title:"Places to stay", terms:"hotels accommodation stays guest houses", target:"explore.html#categories", type:"EXPLORE" },
+    { title:"Things to do", terms:"activities experiences outings", target:"explore.html#categories", type:"EXPLORE" },
+    { title:"Local businesses", terms:"business shop local directory companies", target:"hub.html#directory", type:"HUB" },
+    { title:"Services & professionals", terms:"services professionals repair help", target:"hub.html#directory", type:"HUB" },
+    { title:"Jobs & opportunities", terms:"jobs careers vacancies opportunities", target:"hub.html#opportunities", type:"HUB" },
+    { title:"Events & activities", terms:"events happenings calendar activities", target:"hub.html#opportunities", type:"HUB" },
+    { title:"Community resources", terms:"community local information resources", target:"hub.html#directory", type:"HUB" },
+    { title:"Advanced Level resources", terms:"a/l al advanced level subjects notes", target:"edu.html#resources", type:"EDU" },
+    { title:"Ordinary Level resources", terms:"o/l ol ordinary level subjects notes", target:"edu.html#resources", type:"EDU" },
+    { title:"Past papers", terms:"past papers exam answers revision", target:"edu.html#resources", type:"EDU" },
+    { title:"Notes & study guides", terms:"study guides learning resources notes", target:"edu.html#resources", type:"EDU" },
+    { title:"Courses & skills", terms:"courses skills training learning", target:"edu.html#resources", type:"EDU" }
+  ];
 
-   video.addEventListener("playing",()=>{
-     if(index!==current)return;
-     playing=true;
-     failed.delete(index);
-     video.dataset.videoState="playing";
-     video.classList.remove("has-video-error");
-     setProgress(index);
-     schedule(PLAY_TIME);
-   });
+  const modal = $("#searchModal");
+  const searchInput = $("#siteSearch");
+  const results = $("#searchResults");
+  const openButtons = [$("#openSearch"), $("#heroSearch")].filter(Boolean);
+  const closeButton = $("#closeSearch");
+  let previousFocus = null;
 
-   const markFailed=()=>{
-     video.dataset.videoState="error";
-     video.classList.add("has-video-error");
-     failed.add(index);
-     if(index===current&&!playing)activateNextAvailable();
-   };
-   video.addEventListener("error",markFailed);
-   video.addEventListener("stalled",()=>{
-     if(index===current&&!playing) {
-       video.dataset.videoState="stalled";
-       schedule(LOAD_TIMEOUT);
-     }
-   });
- });
+  function renderSearch(query = "") {
+    if (!results) return;
+    const term = query.trim().toLocaleLowerCase();
+    const matches = term
+      ? searchable.filter(item => (item.title + " " + item.terms).toLocaleLowerCase().includes(term))
+      : searchable.slice(0, 5);
+    results.replaceChildren();
+    const label = document.createElement("span");
+    label.className = "results-label";
+    label.textContent = term ? (matches.length ? "MATCHING DISCOVERIES" : "NO MATCHES YET") : "QUICK DISCOVERIES";
+    results.append(label);
+    if (!matches.length) {
+      const empty = document.createElement("p");
+      empty.className = "search-hint";
+      empty.textContent = "Try travel, businesses, jobs or study.";
+      results.append(empty);
+      return;
+    }
+    matches.slice(0, 8).forEach(item => {
+      const link = document.createElement("a");
+      link.href = item.target;
+      link.className = "search-result-link";
+      const title = document.createElement("span");
+      title.textContent = item.title;
+      const type = document.createElement("small");
+      type.textContent = item.type;
+      const arrow = document.createElement("b");
+      arrow.textContent = "↗";
+      link.append(title, type, arrow);
+      results.append(link);
+    });
+  }
 
- function activateNextAvailable(){
-   stop();
-   playing=false;
-   if(failed.size>=videos.length){
-     videos.forEach(v=>{v.pause();v.classList.remove("is-visible");});
-     bars.forEach(b=>b.classList.remove("is-current"));
-     return;
-   }
-   let next=(current+1)%videos.length;
-   let attempts=0;
-   while(failed.has(next)&&attempts<videos.length){next=(next+1)%videos.length;attempts++;}
-   activate(next);
- }
+  function openSearch(query = "") {
+    if (!modal || !searchInput) return;
+    previousFocus = document.activeElement;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("search-open");
+    searchInput.value = query;
+    renderSearch(query);
+    window.requestAnimationFrame(() => searchInput.focus());
+  }
+  function closeSearch() {
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("search-open");
+    if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+  }
+  openButtons.forEach(button => button.addEventListener("click", () => openSearch()));
+  closeButton?.addEventListener("click", closeSearch);
+  searchInput?.addEventListener("input", event => renderSearch(event.target.value));
+  modal?.addEventListener("click", event => { if (event.target === modal) closeSearch(); });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && modal?.classList.contains("open")) closeSearch();
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k" && modal) {
+      event.preventDefault();
+      openSearch();
+    }
+  });
+  $$("[data-search-term]").forEach(link => link.addEventListener("click", event => {
+    if (!modal || !searchInput) return;
+    event.preventDefault();
+    openSearch(link.dataset.searchTerm || "");
+  }));
 
- function activate(index){
-   stop();
-   playing=false;
-   current=(index+videos.length)%videos.length;
-   videos.forEach((video,i)=>{
-     const active=i===current;
-     video.classList.toggle("is-visible",active);
-     video.classList.remove("is-leaving");
-     if(!active){video.pause();video.dataset.videoState="idle";}
-   });
-   setProgress(current);
-   const active=videos[current];
-   if(!active||pageHidden)return;
-   active.dataset.videoState="loading";
-   active.muted=true;
-   if(active.readyState===0)active.load();
+  // Resilient video rotation: one active clip at a time, with automatic failover.
+  // Pexels' own download endpoints redirect to the currently hosted MP4 rendition.
+  const hero = $(".hero-video-backdrop");
+  if (hero) {
+    const videos = $$(".hero-bg-video", hero);
+    const bars = $$(".hero-video-progress span", hero);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let current = 0;
+    let timer = 0;
+    let loadTimer = 0;
+    let userGestureSeen = false;
+    const durations = 16000;
 
-   let settled=false;
-   const loadTimer=setTimeout(()=>{
-     if(!settled&&current===index&&!playing){
-       failed.add(index);
-       active.dataset.videoState="timeout";
-       activateNextAvailable();
-     }
-   },LOAD_TIMEOUT);
+    const stopTimers = () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(loadTimer);
+      timer = 0;
+      loadTimer = 0;
+    };
+    const markCurrent = index => bars.forEach((bar, i) => bar.classList.toggle("is-current", i === index));
+    const pauseAll = () => videos.forEach(video => { try { video.pause(); } catch (_) {} });
+    const failover = () => {
+      stopTimers();
+      const next = (current + 1) % videos.length;
+      if (next === current) return;
+      start(next);
+    };
+    function start(index) {
+      if (!videos.length || document.hidden || reducedMotion) return;
+      stopTimers();
+      pauseAll();
+      current = (index + videos.length) % videos.length;
+      const video = videos[current];
+      videos.forEach((item, i) => {
+        item.classList.toggle("is-visible", i === current);
+        item.dataset.videoState = i === current ? "loading" : "idle";
+      });
+      markCurrent(current);
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.setAttribute("muted", "");
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      const source = video.dataset.videoSource;
+      if (!source) { failover(); return; }
+      if (video.dataset.loadedSource !== source) {
+        video.src = source;
+        video.dataset.loadedSource = source;
+        video.load();
+      }
+      loadTimer = window.setTimeout(() => {
+        if (current === index && video.dataset.videoState !== "playing") failover();
+      }, 12000);
+      const play = () => {
+        if (current !== index || document.hidden) return;
+        const result = video.play();
+        if (result && typeof result.catch === "function") {
+          result.catch(() => {
+            video.dataset.videoState = "blocked";
+            if (userGestureSeen) failover();
+          });
+        }
+      };
+      if (video.readyState >= 2) play();
+      else video.addEventListener("canplay", play, { once: true });
+    }
 
-   const startPlayback=()=>{
-     if(settled||pageHidden||current!==index)return;
-     settled=true;
-     clearTimeout(loadTimer);
-     const result=active.play();
-     if(result&&typeof result.catch==="function"){
-       result.catch(()=>{
-         failed.add(index);
-         active.dataset.videoState="blocked";
-         activateNextAvailable();
-       });
-     }
-   };
-   if(active.readyState>=2)startPlayback();
-   else active.addEventListener("canplay",startPlayback,{once:true});
- }
-
- document.addEventListener("visibilitychange",()=>{
-   pageHidden=document.hidden;
-   if(pageHidden){stop();videos.forEach(v=>v.pause());}
-   else activate(current);
- });
- hero.addEventListener("mouseenter",stop);
- hero.addEventListener("mouseleave",()=>{if(!pageHidden&&playing)schedule(PLAY_TIME);});
- document.addEventListener("pointerdown",()=>{
-   if(!pageHidden&&!playing) {
-     const active=videos[current];
-     if(active){active.muted=true;active.play().catch(()=>{});}
-   }
- },{passive:true,once:true});
-
- if(reducedMotion){
-   videos.forEach(v=>{v.pause();v.classList.remove("is-visible");});
-   bars.forEach(b=>b.classList.remove("is-current"));
- }else{
-   activate(0);
- }
+    videos.forEach((video, index) => {
+      video.addEventListener("playing", () => {
+        if (index !== current) return;
+        window.clearTimeout(loadTimer);
+        video.dataset.videoState = "playing";
+        timer = window.setTimeout(() => start(current + 1), durations);
+      });
+      video.addEventListener("error", () => {
+        if (index === current) {
+          video.dataset.videoState = "error";
+          failover();
+        }
+      });
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) { stopTimers(); pauseAll(); }
+      else start(current);
+    });
+    document.addEventListener("pointerdown", () => {
+      userGestureSeen = true;
+      const active = videos[current];
+      if (active && active.dataset.videoState !== "playing" && !document.hidden && !reducedMotion) {
+        active.muted = true;
+        active.play().catch(() => {});
+      }
+    }, { once: true, passive: true });
+    if (!reducedMotion) start(0);
+  }
 })();
