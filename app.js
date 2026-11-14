@@ -20,7 +20,7 @@ const menu=$("#menuToggle"),nav=$(".main-nav");menu?.addEventListener("click",()
  if(!videos.length)return;
 
  let current=0, timer=null, pageHidden=document.hidden, playing=false, failed=new Set();
- const PLAY_TIME=11000, LOAD_TIMEOUT=16000;
+ const PLAY_TIME=12000, LOAD_TIMEOUT=22000;
  const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
  const stop=()=>{if(timer!==null){clearTimeout(timer);timer=null;}};
  const setProgress=(index)=>bars.forEach((bar,i)=>bar.classList.toggle("is-current",i===index));
